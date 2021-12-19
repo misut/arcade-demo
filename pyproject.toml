@@ -1,7 +1,7 @@
-[too.poe.tasks]
+[tool.poe.tasks]
 _black-check = "black --check ."
-_isort-check  "isort --check-only ."
-format-check  ["_black-check", "_isort-check"]
+_isort-check = "isort --check-only ."
+format-check = ["_black-check", "_isort-check"]
 
 _black = "black ."
 _isort = "isort ."
@@ -52,8 +52,10 @@ description = ""
 authors = ["misut <pkr5207@gmail.com>"]
 
 [tool.poetry.dependencies]
+arcade = "^2.6.6"
+dependency-injector = "^4.37.0"
 pydantic = {extras = ["dotenv"], version = "^1.8.2"}
-python = "3.10"
+python = "^3.10"
 
 [tool.poetry.dev-dependencies]
 black = "^21.11b1"
