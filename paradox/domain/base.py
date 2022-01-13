@@ -14,7 +14,7 @@ class Vector(ABC):
         return hash(self._tpl)
 
     def __str__(self) -> str:
-        return "(" + ",".join(self._tpl) + ")"
+        return "(" + ", ".join(map(str, self._tpl)) + ")"
 
 
 class Vec2(Vector):
@@ -24,6 +24,12 @@ class Vec2(Vector):
     def __init__(self, x: float, y: float) -> None:
         self.x, self.y = x, y
         self._tpl = (x, y)
+    
+    def __add__(self, other: Vec2) -> Vec2:
+        return Vec2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Vec2) -> Vec2:
+        return Vec2(self.x - other.x, self.y + other.y)
 
 
 class Vec3(Vector):
@@ -34,6 +40,12 @@ class Vec3(Vector):
     def __init__(self, x: float, y: float, z: float) -> None:
         self.x, self.y, self.z = x, y, z
         self._tpl = (x, y, z)
+    
+    def __add__(self, other: Vec3) -> Vec3:
+        return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other: Vec3) -> Vec3:
+        return Vec3(self.x - other.x, self.y + other.y, self.z - other.z)
 
 
 class IVec2(Vector):
@@ -43,6 +55,12 @@ class IVec2(Vector):
     def __init__(self, x: int, y: int) -> None:
         self.x, self.y = x, y
         self._tpl = (x, y)
+    
+    def __add__(self, other: IVec2) -> IVec2:
+        return IVec2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: IVec2) -> IVec2:
+        return IVec2(self.x - other.x, self.y + other.y)
 
 
 class IVec3(Vector):
@@ -53,3 +71,9 @@ class IVec3(Vector):
     def __init__(self, x: int, y: int, z: int) -> None:
         self.x, self.y, self.z = x, y, z
         self._tpl = (x, y, z)
+    
+    def __add__(self, other: IVec3) -> IVec3:
+        return IVec3(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other: IVec3) -> IVec3:
+        return IVec3(self.x - other.x, self.y + other.y, self.z - other.z)

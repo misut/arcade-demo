@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, BinaryIO
+from pathlib import Path
+from typing import Any
 import os
 import pickle
 import shutil
 
 from paradox.infrastructure.repository import (
-    AbstracWorldRepository,
+    AbstractWorldRepository,
     FileWorldRepository,
 )
 
 
 class AbstractWorldUnitOfWork(ABC):
-    worlds: AbstracWorldRepository
+    worlds: AbstractWorldRepository
 
     def __enter__(self) -> AbstractWorldUnitOfWork:
         return self
@@ -31,31 +32,55 @@ class AbstractWorldUnitOfWork(ABC):
 
 
 class FileWorldUnitOfWork(AbstractWorldUnitOfWork):
-    file_path: str
-    stream: BinaryIO
+    world_path: Path
 
-    def __init__(self, file_path: str) -> None:
-        self.file_path = file_path
+    def __init__(self, world_path: Path) -> None:
+        self.world_path = world_path
     
     def __enter__(self) -> FileWorldUnitOfWork:
-        self.stream = open(self.file_path, "rb+")
-        self.worlds = FileWorldRepository(self.stream)
-        shutil.copyfile(
-            src=self.file_path,
-            dst=self.file_path+".backup"
-        )
+        self.world_path.mkdir(parents=True, exist_ok=True)
+        for file_path in self.world_path.iterdir():
+            if not (file_path.is_file() and file_path.suffix == ".pkl"):
+                continue
+            shutil.copyfile(
+                src=file_path,
+                dst=file_path.with_suffix(".backup")
+            )
+        self.worlds = FileWorldRepository(world_path=self.world_path)
         return super().__enter__()
 
     def __exit__(self, *args: Any) -> None:
-        self.stream.close()
-        os.remove(self.file_path+".backup")
         super().__exit__(*args)
 
+        # Remove backup files
+        for file_path in self.world_path.iterdir():
+            if not file_path.is_file():
+                continue
+            if file_path.suffix == ".backup":
+                os.remove(file_path)
+
     def commit(self) -> None:
-        pickle.dump(self.worlds.mapping, self.stream)
+        # Pickle worlds
+        for world_name, world in self.worlds.mapping.items():
+            file_path = self.world_path.joinpath(f"{world_name}.pkl")
+            file_path.touch(exist_ok=True)
+            with file_path.open("rb+") as stream:
+                pickle.dump(world, stream)
 
     def rollback(self) -> None:
-        shutil.copyfile(
-            src=self.file_path+".backup",
-            dst=self.file_path
-        )
+        # Remove pickled files
+        for file_path in self.world_path.iterdir():
+            if not file_path.is_file():
+                continue
+            if file_path.suffix == ".pkl":
+                os.remove(file_path)
+        
+        # Move backup files to pickled files
+        for file_path in self.world_path.iterdir():
+            if not file_path.is_file():
+                continue
+            if file_path.suffix == ".backup":
+                shutil.move(
+                    src=file_path,
+                    dst=file_path.with_suffix(".pkl")
+                )
